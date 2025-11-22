@@ -99,6 +99,8 @@ export const CameraView = ({ onDetection, isScanning, setIsScanning }: CameraVie
       relevantClasses.includes(pred.class)
     );
 
+    console.log("Detections:", filteredPredictions.length, filteredPredictions.map(p => p.class));
+
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     
     filteredPredictions.forEach((prediction) => {
