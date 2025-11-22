@@ -188,7 +188,7 @@ export const CameraView = ({ onDetection, isScanning, setIsScanning }: CameraVie
       </div>
 
       {!stream && (
-        <div className="absolute inset-0 flex items-center justify-center bg-background/80">
+        <div className="absolute inset-0 flex items-center justify-center bg-background/80 pointer-events-none">
           <div className="text-center">
             <Camera className="w-16 h-16 mx-auto mb-4 text-muted-foreground" />
             <p className="text-muted-foreground">Camera inactive</p>
