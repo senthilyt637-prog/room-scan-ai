@@ -90,26 +90,28 @@ const DetectedObject = ({ detection, index }: { detection: Detection; index: num
 };
 
 export const WallVisualization = ({ detections, selectedTexture }: WallVisualizationProps) => {
+  console.log("3D View - Detections:", detections.length, detections);
+  
   return (
     <div className="relative w-full h-full bg-card border border-border rounded-lg overflow-hidden">
       <div className="absolute inset-0 grid-pattern opacity-10 pointer-events-none" />
       
-      <Canvas camera={{ position: [0, 0, 5], fov: 50 }}>
-        <ambientLight intensity={0.3} />
-        <directionalLight position={[5, 5, 5]} intensity={0.5} />
-        <pointLight position={[0, 0, 3]} intensity={0.5} color="#00ffff" />
+      <Canvas camera={{ position: [0, 0, 8], fov: 60 }}>
+        <ambientLight intensity={0.5} />
+        <directionalLight position={[5, 5, 5]} intensity={1} />
+        <pointLight position={[0, 0, 3]} intensity={1} color="#00ffff" />
         
         <Wall texture={selectedTexture} />
         
         {detections.map((detection, index) => (
-          <DetectedObject key={index} detection={detection} index={index} />
+          <DetectedObject key={`${detection.class}-${index}`} detection={detection} index={index} />
         ))}
         
         <OrbitControls 
           enableZoom={true}
           enablePan={true}
-          maxDistance={10}
-          minDistance={2}
+          maxDistance={15}
+          minDistance={3}
         />
       </Canvas>
 
@@ -120,6 +122,11 @@ export const WallVisualization = ({ detections, selectedTexture }: WallVisualiza
         <div className="text-xs text-muted-foreground mt-1">
           {detections.length} objects detected
         </div>
+        {detections.length > 0 && (
+          <div className="text-xs text-primary mt-1">
+            Active: {detections.map(d => d.class).join(", ")}
+          </div>
+        )}
       </div>
     </div>
   );
