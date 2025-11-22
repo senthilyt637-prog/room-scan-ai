@@ -34,10 +34,22 @@ const Wall = ({ texture }: { texture: string }) => {
 };
 
 const DetectedObject = ({ detection, index }: { detection: Detection; index: number }) => {
+  // Normalize bbox coordinates to fit on the wall (assuming typical camera resolution)
+  // Center the detection on the wall which spans from -4 to 4 (width 8)
+  const normalizedX = ((detection.bbox[0] + detection.bbox[2] / 2) / 640) * 8 - 4;
+  const normalizedY = (1 - (detection.bbox[1] + detection.bbox[3] / 2) / 480) * 6 - 3;
+  
   const position: [number, number, number] = [
-    (detection.bbox[0] / 200) - 2,
-    2 - (detection.bbox[1] / 200),
-    -1.8
+    normalizedX,
+    normalizedY,
+    -1.5  // In front of the wall
+  ];
+
+  // Size based on bbox
+  const size: [number, number, number] = [
+    Math.max(0.3, (detection.bbox[2] / 640) * 4),
+    Math.max(0.3, (detection.bbox[3] / 480) * 4),
+    0.2
   ];
 
   const getColor = (className: string) => {
@@ -45,6 +57,12 @@ const DetectedObject = ({ detection, index }: { detection: Detection; index: num
       clock: "#00ffff",
       tv: "#ff00ff",
       laptop: "#00ff00",
+      mouse: "#ffff00",
+      keyboard: "#ff8800",
+      "cell phone": "#ff0080",
+      book: "#8000ff",
+      vase: "#00ff80",
+      "potted plant": "#80ff00",
       default: "#00ffff"
     };
     return colorMap[className] || colorMap.default;
@@ -52,20 +70,20 @@ const DetectedObject = ({ detection, index }: { detection: Detection; index: num
 
   return (
     <group position={position}>
-      <Box args={[0.3, 0.3, 0.1]}>
+      <Box args={size}>
         <meshStandardMaterial 
           color={getColor(detection.class)}
           emissive={getColor(detection.class)}
-          emissiveIntensity={0.5}
+          emissiveIntensity={0.7}
           transparent
-          opacity={0.8}
+          opacity={0.9}
         />
       </Box>
       {/* Glow effect */}
       <pointLight 
         color={getColor(detection.class)} 
-        intensity={1} 
-        distance={2}
+        intensity={2} 
+        distance={3}
       />
     </group>
   );
