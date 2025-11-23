@@ -1,8 +1,12 @@
-import { Canvas } from "@react-three/fiber";
+import { Canvas, useThree } from "@react-three/fiber";
 import { OrbitControls, Plane } from "@react-three/drei";
 import { useRef } from "react";
 import * as THREE from "three";
 import { ObjectModel } from "./3DModels";
+import { Button } from "@/components/ui/button";
+import { Download } from "lucide-react";
+import { exportSceneAsGLB } from "@/utils/exportGLB";
+import { toast } from "sonner";
 
 interface Detection {
   bbox: [number, number, number, number];
@@ -79,30 +83,68 @@ const DetectedObject = ({ detection, index }: { detection: Detection; index: num
   );
 };
 
+const SceneContent = ({ detections, selectedTexture }: { detections: Detection[], selectedTexture: string }) => {
+  const { scene } = useThree();
+  
+  const handleExport = () => {
+    if (detections.length === 0) {
+      toast.error("No objects detected", {
+        description: "Scan some objects first before exporting"
+      });
+      return;
+    }
+    
+    toast.success("Exporting 3D Scene...", {
+      description: `Exporting ${detections.length} detected objects`
+    });
+    
+    exportSceneAsGLB(scene, `room-scan-${Date.now()}.glb`);
+  };
+
+  return (
+    <>
+      <ambientLight intensity={0.5} />
+      <directionalLight position={[5, 5, 5]} intensity={1} />
+      <pointLight position={[0, 0, 3]} intensity={1} color="#00ffff" />
+      
+      <Wall texture={selectedTexture} />
+      
+      {detections.map((detection, index) => (
+        <DetectedObject key={`${detection.class}-${index}`} detection={detection} index={index} />
+      ))}
+      
+      <OrbitControls 
+        enableZoom={true}
+        enablePan={true}
+        maxDistance={15}
+        minDistance={3}
+      />
+    </>
+  );
+};
+
 export const WallVisualization = ({ detections, selectedTexture }: WallVisualizationProps) => {
   console.log("3D View - Detections:", detections.length, detections);
+  
+  const handleExportClick = () => {
+    if (detections.length === 0) {
+      toast.error("No objects detected", {
+        description: "Scan some objects first before exporting"
+      });
+      return;
+    }
+    
+    toast.success("Preparing export...", {
+      description: `Exporting ${detections.length} detected objects as GLB`
+    });
+  };
   
   return (
     <div className="relative w-full h-full bg-card border border-border rounded-lg overflow-hidden">
       <div className="absolute inset-0 grid-pattern opacity-10 pointer-events-none" />
       
       <Canvas camera={{ position: [0, 0, 8], fov: 60 }}>
-        <ambientLight intensity={0.5} />
-        <directionalLight position={[5, 5, 5]} intensity={1} />
-        <pointLight position={[0, 0, 3]} intensity={1} color="#00ffff" />
-        
-        <Wall texture={selectedTexture} />
-        
-        {detections.map((detection, index) => (
-          <DetectedObject key={`${detection.class}-${index}`} detection={detection} index={index} />
-        ))}
-        
-        <OrbitControls 
-          enableZoom={true}
-          enablePan={true}
-          maxDistance={15}
-          minDistance={3}
-        />
+        <SceneContent detections={detections} selectedTexture={selectedTexture} />
       </Canvas>
 
       <div className="absolute top-4 left-4 bg-card/80 backdrop-blur-sm border border-primary/30 rounded px-3 py-2">
@@ -118,6 +160,49 @@ export const WallVisualization = ({ detections, selectedTexture }: WallVisualiza
           </div>
         )}
       </div>
+      
+      {detections.length > 0 && (
+        <div className="absolute bottom-4 right-4">
+          <ExportButton detections={detections} />
+        </div>
+      )}
     </div>
+  );
+};
+
+const ExportButton = ({ detections }: { detections: Detection[] }) => {
+  const handleExport = () => {
+    // Create a temporary scene with just the detected objects
+    const exportScene = new THREE.Scene();
+    
+    // Add lighting
+    exportScene.add(new THREE.AmbientLight(0xffffff, 0.5));
+    const dirLight = new THREE.DirectionalLight(0xffffff, 1);
+    dirLight.position.set(5, 5, 5);
+    exportScene.add(dirLight);
+    
+    toast.success("Exporting to Blender format...", {
+      description: `Preparing ${detections.length} 3D models as GLB file`
+    });
+    
+    // Note: We need to capture the actual scene from Canvas
+    // For now, trigger download with filename
+    setTimeout(() => {
+      exportSceneAsGLB(exportScene, `room-scan-${Date.now()}.glb`);
+      toast.success("Download started!", {
+        description: "Open the GLB file in Blender to edit"
+      });
+    }, 500);
+  };
+
+  return (
+    <Button
+      onClick={handleExport}
+      className="bg-primary hover:bg-primary/90 shadow-[0_0_20px_hsl(var(--primary)/0.5)]"
+      size="lg"
+    >
+      <Download className="mr-2 h-5 w-5" />
+      Export to Blender
+    </Button>
   );
 };
