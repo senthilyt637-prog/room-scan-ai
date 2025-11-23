@@ -1,7 +1,8 @@
 import { Canvas } from "@react-three/fiber";
-import { OrbitControls, Plane, Box } from "@react-three/drei";
+import { OrbitControls, Plane } from "@react-three/drei";
 import { useRef } from "react";
 import * as THREE from "three";
+import { ObjectModel } from "./3DModels";
 
 interface Detection {
   bbox: [number, number, number, number];
@@ -35,7 +36,6 @@ const Wall = ({ texture }: { texture: string }) => {
 
 const DetectedObject = ({ detection, index }: { detection: Detection; index: number }) => {
   // Normalize bbox coordinates to fit on the wall (assuming typical camera resolution)
-  // Center the detection on the wall which spans from -4 to 4 (width 8)
   const normalizedX = ((detection.bbox[0] + detection.bbox[2] / 2) / 640) * 8 - 4;
   const normalizedY = (1 - (detection.bbox[1] + detection.bbox[3] / 2) / 480) * 6 - 3;
   
@@ -43,13 +43,6 @@ const DetectedObject = ({ detection, index }: { detection: Detection; index: num
     normalizedX,
     normalizedY,
     -1.5  // In front of the wall
-  ];
-
-  // Size based on bbox
-  const size: [number, number, number] = [
-    Math.max(0.3, (detection.bbox[2] / 640) * 4),
-    Math.max(0.3, (detection.bbox[3] / 480) * 4),
-    0.2
   ];
 
   const getColor = (className: string) => {
@@ -78,23 +71,11 @@ const DetectedObject = ({ detection, index }: { detection: Detection; index: num
   };
 
   return (
-    <group position={position}>
-      <Box args={size}>
-        <meshStandardMaterial 
-          color={getColor(detection.class)}
-          emissive={getColor(detection.class)}
-          emissiveIntensity={0.7}
-          transparent
-          opacity={0.9}
-        />
-      </Box>
-      {/* Glow effect */}
-      <pointLight 
-        color={getColor(detection.class)} 
-        intensity={2} 
-        distance={3}
-      />
-    </group>
+    <ObjectModel 
+      detection={detection}
+      position={position}
+      color={getColor(detection.class)}
+    />
   );
 };
 
