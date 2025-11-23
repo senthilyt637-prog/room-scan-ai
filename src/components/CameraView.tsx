@@ -93,10 +93,13 @@ export const CameraView = ({ onDetection, isScanning, setIsScanning }: CameraVie
 
     const predictions = await model.detect(video);
     
-    // Filter for relevant objects
-    const relevantClasses = ["clock", "tv", "laptop", "mouse", "keyboard", "cell phone", "book", "vase", "potted plant"];
+    // Filter for relevant objects - expanded list
+    const relevantClasses = [
+      "clock", "tv", "laptop", "mouse", "keyboard", "cell phone", "book", "vase", "potted plant",
+      "bottle", "cup", "chair", "couch", "bed", "dining table", "monitor", "remote", "scissors"
+    ];
     const filteredPredictions = predictions.filter(pred => 
-      relevantClasses.includes(pred.class)
+      relevantClasses.includes(pred.class) && pred.score > 0.4
     );
 
     console.log("Detections:", filteredPredictions.length, filteredPredictions.map(p => p.class));
@@ -191,10 +194,21 @@ export const CameraView = ({ onDetection, isScanning, setIsScanning }: CameraVie
 
       {!stream && (
         <div className="absolute inset-0 flex items-center justify-center bg-background/80 pointer-events-none">
-          <div className="text-center">
+          <div className="text-center max-w-md px-4">
             <Camera className="w-16 h-16 mx-auto mb-4 text-muted-foreground" />
-            <p className="text-muted-foreground">Camera inactive</p>
+            <p className="text-muted-foreground mb-4">Camera inactive</p>
+            <div className="text-xs text-muted-foreground bg-card/50 backdrop-blur-sm border border-border rounded p-3">
+              <p className="font-semibold mb-2 text-primary">Detectable Objects:</p>
+              <p className="leading-relaxed">laptop, phone, keyboard, mouse, monitor, book, clock, cup, bottle, chair, table, or TV</p>
+            </div>
           </div>
+        </div>
+      )}
+      
+      {stream && (
+        <div className="absolute top-4 right-4 bg-card/80 backdrop-blur-sm border border-primary/30 rounded px-3 py-2 text-xs">
+          <div className="text-primary font-mono mb-1">SCANNING ACTIVE</div>
+          <div className="text-muted-foreground">Point at: laptop, phone, keyboard, mouse, monitor, book, clock, cup, bottle</div>
         </div>
       )}
     </div>
