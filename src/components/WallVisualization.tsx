@@ -63,6 +63,15 @@ const DetectedObject = ({ detection, index }: { detection: Detection; index: num
       book: "#8000ff",
       vase: "#00ff80",
       "potted plant": "#80ff00",
+      bottle: "#ff4444",
+      cup: "#44ff44",
+      chair: "#4444ff",
+      couch: "#ff44ff",
+      bed: "#ffff44",
+      "dining table": "#44ffff",
+      monitor: "#00ff88",
+      remote: "#ff8800",
+      scissors: "#8800ff",
       default: "#00ffff"
     };
     return colorMap[className] || colorMap.default;
